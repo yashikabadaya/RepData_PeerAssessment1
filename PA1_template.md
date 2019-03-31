@@ -23,54 +23,82 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 
 ## Loading and preprocessing the data
 
-```{r, echo=TRUE}
+
+```r
 data<- read.csv("activity.csv")
 data$date<- as.POSIXct(data$date, format="%Y-%m-%d")
 na_removed_data <- data[!is.na(data$steps),]
 ```
 
 ## What is mean total number of steps taken per day?
-```{r, echo=TRUE}
+
+```r
 total_steps_in_a_day <- aggregate(na_removed_data$steps, by = list(na_removed_data$date), FUN = sum)
 hist(total_steps_in_a_day$x, col= "black", xlab = "Total no of steps in a day", ylab = "Frequency", main = "Total number of steps taken per day (Histogram)")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
 
 The mean of total number of steps taken per day is given by :
-```{r, echo=TRUE}
+
+```r
 mean(total_steps_in_a_day$x)
+```
+
+```
+## [1] 10766.19
 ```
 
 
 The median of total number of steps taken per day is given by:
-```{r, echo=TRUE}
+
+```r
 median(total_steps_in_a_day$x)
 ```
 
+```
+## [1] 10765
+```
+
 ## What is the average daily activity pattern?
-```{r, echo= TRUE}
+
+```r
 library(ggplot2)
 avg_no_steps_by_interal <- aggregate(na_removed_data$steps , by = list(na_removed_data$interval), FUN = mean)
 
 ggplot(avg_no_steps_by_interal, aes(avg_no_steps_by_interal$Group.1, avg_no_steps_by_interal$x)) + geom_line() + xlab("5 minute interval")+ ylab("Average number of steps") + ggtitle("Average Daily Activity Pattern")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 The 5-minute interval, on average across all the days in the dataset, that contains the maximum number of steps is given by :
-```{r, echo=TRUE}
+
+```r
 max_steps <- which.max(avg_no_steps_by_interal$x)
 answer <- avg_no_steps_by_interal[max_steps, "Group.1"]
 answer
+```
+
+```
+## [1] 835
 ```
 
 
 
 ## Imputing missing values
 The total number of missing values in the dataset are :
-```{r, echo=TRUE}
+
+```r
 sum(is.na(data))
 ```
+
+```
+## [1] 2304
+```
 The startegy used to fill in the missing values is by filling those values with the mean of the interval of the data. Hence we calculate the mean of steps but broken by the interval using tapply. 
-```{r, echo=TRUE}
+
+```r
 StepsPerInterval <- tapply(data$steps, data$interval, mean, na.rm = TRUE)
 # splitting data values into groups based on interval variable
 data_split <- split(data, data$interval)
@@ -81,27 +109,41 @@ for(i in 1:length(data_split)){
 }
 ```
 Creating histogram for the changed new data ie after filling in the missing values.
-```{r, echo=TRUE}
+
+```r
 changed_data <- do.call("rbind", data_split)
 changed_data <- changed_data[order(changed_data$date) ,]
 changed_total_steps_in_a_day <- tapply(changed_data$steps, changed_data$date, sum)
 hist(changed_total_steps_in_a_day, xlab = "Number of Steps", ylab = "Frequency" ,main = "Total number of steps taken per day after replacing NAs (Histogram)" ,col = "black")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 The mean of total number of steps taken per day is given by :
-```{r, echo=TRUE}
+
+```r
 mean(changed_total_steps_in_a_day)
+```
+
+```
+## [1] 10766.19
 ```
 
 
 The median of total number of steps taken per day is given by:
-```{r, echo=TRUE}
+
+```r
 median(changed_total_steps_in_a_day)
+```
+
+```
+## [1] 10766.19
 ```
 On comparing with the previous histogram results we can infer that there is no change in the mean value of the data but there is slight increase in the median value. Since the increase is not significant we can say that the added missing values resulted in no significant change in the original activity data.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r, echo=TRUE}
+
+```r
 changed_data$week <- ifelse(weekdays(changed_data$date) %in% c("Saturday", "Sunday"), "weekend", "weekday")
 
 table2 <- aggregate(steps ~ interval + week, data=changed_data, mean)
@@ -111,6 +153,8 @@ ggplot(table2, aes(interval, steps)) +
     xlab("5 minute interval") + 
     ylab("Average number of steps") + ggtitle("Comparison between weekdays and weekends")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
 
 We can infer from the above graphs that there is difference in activity patterns between weekdays and weekends.
 
